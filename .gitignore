@@ -1,2 +1,2 @@
-bin/**
-tmp/**
+bin/*
+tmp/*
