@@ -1,6 +1,7 @@
 #include "player.h"
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "cglm/struct.h"
 
@@ -8,6 +9,8 @@
 #include "camera.h"
 #include "window.h"
 #include "main.h"
+#include "game.h"
+#include "physics.h"
 
 cg_player_t *cgPlayer() {
   cg_player_t *player = malloc(sizeof(cg_player_t));
@@ -19,6 +22,15 @@ cg_player_t *cgPlayer() {
   player->pos = GLMS_VEC3_ZERO;
   player->rot = GLMS_VEC3_ZERO;
   player->velocity = GLMS_VEC3_ZERO;
+
+  player->collider = cgPhysicsCollider(true,
+                                       true,
+                                       (vec3s) { 0.5f, PLAYER_HEIGHT, 0.5f },
+                                       GLMS_VEC3_ZERO);
+  player->collider->stepHeight = PLAYER_STEP_HEIGHT;
+  player->isOnFloor = false;
+
+  cgPhysicsWorldAdd(&cgGamePhysicsWorld, player->collider);
 
   return player;
 }
@@ -71,12 +83,25 @@ void cgPlayerUpdate(cg_player_t *player) {
   move = glms_vec3_normalize(move);
   move = glms_vec3_mul(move, (vec3s) {
       PLAYER_SPEED,
-      PLAYER_SPEED,
+      1.0f,
       PLAYER_SPEED,
     });
 
   player->velocity.x = glm_lerp(player->velocity.x, move.x, PLAYER_ACCEL);
   player->velocity.z = glm_lerp(player->velocity.z, move.z, PLAYER_ACCEL);
 
+  player->velocity = cgPhysicsWorldAttemptMove(cgGamePhysicsWorld,
+                                               player->collider,
+                                               player->velocity,
+                                               &player->isOnFloor);
+
   player->pos = glms_vec3_add(player->pos, player->velocity);
+  player->collider->pos = player->pos;
+}
+
+void cgPlayerDelete(cg_player_t **player) {
+  free((*player)->cam);
+  free((*player)->collider);
+  free(*player);
+  *player = NULL;
 }

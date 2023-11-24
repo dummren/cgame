@@ -84,7 +84,9 @@ void cgMeshDraw(const cg_mesh_t *mesh) {
   cgMeshUnbind(mesh);
 }
 
-void cgMeshDelete(cg_mesh_t *mesh) {
-  glDeleteVertexArrays(1, &mesh->vao);
-  glDeleteBuffers(1, &mesh->ebo);
+void cgMeshDelete(cg_mesh_t **mesh) {
+  glDeleteVertexArrays(1, &(*mesh)->vao);
+  glDeleteBuffers(1, &(*mesh)->ebo);
+  free(*mesh);
+  *mesh = NULL;
 }

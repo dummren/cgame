@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "cglm/struct.h"
 
@@ -13,6 +14,9 @@
 #include "material.h"
 #include "mesh.h"
 #include "camera.h"
+#include "physics.h"
+#include "game.h"
+#include "lights.h"
 
 cg_object_t *cgObject() {
   cg_object_t *object = malloc(sizeof(cg_object_t));
@@ -25,8 +29,11 @@ cg_object_t *cgObject() {
 
   object->materialSlots = malloc(0);
 
-  object->pos = (vec3s) { 0.0f, 0.0f, 0.0f };
-  object->rot = (vec3s) { 0.0f, 0.0f, 0.0f };
+  object->pos = GLMS_VEC3_ZERO;
+  object->rot = GLMS_VEC3_ZERO;
+
+  object->collider = cgPhysicsCollider(false, false,
+                                       GLMS_VEC3_ZERO, GLMS_VEC3_ZERO);
 
   return object;
 }
@@ -131,15 +138,47 @@ void cgObjectDraw(cg_object_t *object, mat4s projMat, mat4s viewMat) {
 
     glUniform1i(glGetUniformLocation(object->prog, uAlbedoTexName), i * 2 + 0);
     glUniform1i(glGetUniformLocation(object->prog, uBrightTexName), i * 2 + 1);
+
+    for (size_t i = 0; i < CG_LIGHTS_POINTS_MAX; i++) {
+      if (cgLightsIsPointSet(cgLightsPoints[i]))
+        continue;
+
+      char istr[33];
+      sprintf(istr, "%d\0", i);
+
+      char uPointLightPosName[128];
+      strcpy(uPointLightPosName, "u_pointLights[\0");
+      strcat(uPointLightPosName, istr);
+      strcat(uPointLightPosName, "].pos\0");
+
+      char uPointLightColName[128];
+      strcpy(uPointLightColName, "u_pointLights[\0");
+      strcat(uPointLightColName, istr);
+      strcat(uPointLightColName, "].col\0");
+
+      char uPointLightRadiusName[128];
+      strcpy(uPointLightRadiusName, "u_pointLights[\0");
+      strcat(uPointLightRadiusName, istr);
+      strcat(uPointLightRadiusName, "].radius\0");
+
+      glUniform3fv(glGetUniformLocation(object->prog, uPointLightPosName),
+                   1, cgLightsPoints[i].pos.raw);
+      glUniform3fv(glGetUniformLocation(object->prog, uPointLightColName),
+                   1, cgLightsPoints[i].col.raw);
+      glUniform1f(glGetUniformLocation(object->prog, uPointLightRadiusName),
+                  cgLightsPoints[i].radius);
+    }
   }
 
-  glUniform1f(glGetUniformLocation(object->prog, "u_time"), glfwGetTime());
-  glUniformMatrix4fv(glGetUniformLocation(object->prog, "u_projMat"),
+  glUniform1f(glGetUniformLocation(object->prog, "u_time\0"), glfwGetTime());
+  glUniformMatrix4fv(glGetUniformLocation(object->prog, "u_projMat\0"),
                      1, false, projMat.raw[0]);
-  glUniformMatrix4fv(glGetUniformLocation(object->prog, "u_viewMat"),
+  glUniformMatrix4fv(glGetUniformLocation(object->prog, "u_viewMat\0"),
                      1, false, viewMat.raw[0]);
-  glUniformMatrix4fv(glGetUniformLocation(object->prog, "u_transMat"),
+  glUniformMatrix4fv(glGetUniformLocation(object->prog, "u_transMat\0"),
                      1, false, cgObjectTrans(object).raw[0]);
+  glUniform4fv(glGetUniformLocation(object->prog, "u_ambientCol\0"),
+               1, cgGameAmbientColor.raw);
 
   cgMeshBind(object->mesh);
   cgMeshDraw(object->mesh);
@@ -154,4 +193,14 @@ void cgObjectDraw(cg_object_t *object, mat4s projMat, mat4s viewMat) {
   }
 }
 
-#pragma message "TODO: cleanup object"
+void cgObjectDelete(cg_object_t **object) {
+  cgMeshDelete(&(*object)->mesh);
+
+  for (size_t i = 0; i < CG_OBJECT_MAX_MATERIALS; i++)
+    free((*object)->materials[i]);
+
+  free((*object)->materialSlots);
+  free((*object)->collider);
+
+  *object = NULL;
+}

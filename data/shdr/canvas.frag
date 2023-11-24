@@ -1,7 +1,8 @@
 #version 330 core
 
-#define BLUR_STEPS 16
-#define BLUR_INTENSITY 0.025f
+#define BLUR_STEPS 8
+#define BLUR_STEP 2
+#define BLUR_INTENSITY 0.05f
 
 in vec3 f_pos;
 in vec2 f_uv;
@@ -19,11 +20,14 @@ vec4 bloomTex() {
   vec2 texelSize = 1.0f / textureSize(u_brightTex, 0);
 
   for (int i = 0; i < BLUR_STEPS; i++) {
-    tex += texture(u_brightTex, f_uv + vec2(texelSize.x * i, 0.0f)).rgb;
-    tex += texture(u_brightTex, f_uv - vec2(texelSize.x * i, 0.0f)).rgb;
+    vec2 uvH = vec2(texelSize.x * i * BLUR_STEP, 0.0f);
+    vec2 uvV = vec2(0.0f, texelSize.y * i * BLUR_STEP);
 
-    tex += texture(u_brightTex, f_uv + vec2(0.0f, texelSize.y * i)).rgb;
-    tex += texture(u_brightTex, f_uv - vec2(0.0f, texelSize.y * i)).rgb;
+    tex += texture(u_brightTex, f_uv + uvH).rgb;
+    tex += texture(u_brightTex, f_uv - uvH).rgb;
+
+    tex += texture(u_brightTex, f_uv + uvV).rgb;
+    tex += texture(u_brightTex, f_uv - uvV).rgb;
   }
 
   return vec4(tex * BLUR_INTENSITY, 1.0f);

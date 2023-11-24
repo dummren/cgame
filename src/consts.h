@@ -1,7 +1,8 @@
 #ifndef __CG__CONSTS_H__
 #define __CG__CONSTS_H__
 
-#define TEX_FMT GL_RGBA4
+#define TEX_FMT GL_RGBA8
+#define TEX_FMT_DISTORT GL_RGBA16F
 
 #define FONTSIZE_TITLE 50
 #define FONTSIZE_TITLE_ALT 40

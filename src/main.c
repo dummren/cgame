@@ -22,6 +22,7 @@
 #include "fonts.h"
 #include "sfx.h"
 #include "consts.h"
+#include "lights.h"
 
 const cg_start_func_t (*SCENES_START_FUNCS[SCENES_COUNT])() = {
   cgMenuStart,
@@ -129,6 +130,7 @@ int main(int argc, char *argv[]) {
   cgTextInit();
   cgFontsInit();
   cgSfxInit();
+  cgLightsInit();
 
   cg_shader_t prog = cgShadersCanvasProg;
   cg_mesh_t *mesh = cgMesh();
@@ -155,17 +157,20 @@ int main(int argc, char *argv[]) {
     glGenRenderbuffers(1, &renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
 
+    unsigned int fbTexFmt =
+      rand() > RAND_MAX / 512 ? TEX_FMT : TEX_FMT_DISTORT;
+
     cg_texture_t fbFragTex =
       cgTextureEmpty(GL_FLOAT,
                      WND_WIDTH, WND_HEIGHT,
-                     TEX_FMT, GL_RGBA,
+                     fbTexFmt, GL_RGBA,
                      GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE,
                      CGS_TEX_FLTR, CGS_TEX_FLTR);
 
     cg_texture_t fbBrightTex =
       cgTextureEmpty(GL_FLOAT,
                      WND_WIDTH, WND_HEIGHT,
-                     TEX_FMT, GL_RGBA,
+                     fbTexFmt, GL_RGBA,
                      GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE,
                      CGS_TEX_FLTR, CGS_TEX_FLTR);
 
@@ -243,6 +248,8 @@ int main(int argc, char *argv[]) {
     cgWindowSwapBuffers(window);
     cgWindowResetPressedKeysB(window);
     cgWindowResetRelCursorPos(window);
+
+    cgLightsPointsClear();
   }
 
   SCENES_END_FUNCS[scene]();

@@ -31,6 +31,6 @@ void cgMeshStoreIndices(cg_mesh_t*,
 
 void cgMeshDraw(const cg_mesh_t*);
 
-void cgMeshDelete(cg_mesh_t*);
+void cgMeshDelete(cg_mesh_t**);
 
 #endif // __CG__MESH_H__
