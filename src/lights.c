@@ -9,42 +9,37 @@
 
 cg_lights_point_t cgLightsPoints[CG_LIGHTS_POINTS_MAX];
 
+// Predefine a default light to avoid re-creation in cgLightsIsPointSet
+static const cg_lights_point_t defaultPoint = {
+  .pos = {0.0f, 0.0f, 0.0f},
+  .col = {0.0f, 0.0f, 0.0f},
+  .radius = 0.0f,
+};
+
 void cgLightsInit() {
-  cgLightsPointsClear();
+  memset(cgLightsPoints, 0, sizeof(cgLightsPoints));
 }
 
-bool cgLightsIsPointSet(cg_lights_point_t point) {
-  cg_lights_point_t defaultPoint = {
-    (vec3s) { 0.0f, 0.0f, 0.0f },
-    (vec3s) { 0.0f, 0.0f, 0.0f },
-    0.0f,
-  };
-
-  return memcmp(point.col.raw, defaultPoint.col.raw, sizeof(vec3s)) == 0;
+bool cgLightsIsPointSet(const cg_lights_point_t *point) {
+  // Use memcmp to compare with the defaultPoint
+  return memcmp(&point->col, &defaultPoint.col, sizeof(vec3s)) != 0;
 }
 
 void cgLightsPointsClear() {
-  for (size_t i = 0; i < CG_LIGHTS_POINTS_MAX; i++)
-    cgLightsPoints[i] = (cg_lights_point_t) {
-      (vec3s) { 0.0f, 0.0f, 0.0f },
-      (vec3s) { 0.0f, 0.0f, 0.0f },
-      0.0f,
-    };
+  // Use memset for better performance instead of looping
+  memset(cgLightsPoints, 0, sizeof(cgLightsPoints));
 }
 
 void cgLightsPoint(const float x, const float y, const float z,
                    const float r, const float g, const float b,
                    const float radius) {
-  for (size_t i = 0; i < CG_LIGHTS_POINTS_MAX; i++)
-    if (cgLightsIsPointSet(cgLightsPoints[i])) {
-      cg_lights_point_t light;
-
-      light.pos = (vec3s) { x, y, z };
-      light.col = (vec3s) { r, g, b };
-      light.radius = radius;
-
-      cgLightsPoints[i] = light;
-
+  for (size_t i = 0; i < CG_LIGHTS_POINTS_MAX; i++) {
+    if (!cgLightsIsPointSet(&cgLightsPoints[i])) {
+      // Directly assign values to the array element
+      cgLightsPoints[i].pos = (vec3s) { x, y, z };
+      cgLightsPoints[i].col = (vec3s) { r, g, b };
+      cgLightsPoints[i].radius = radius;
       break;
     }
+  }
 }
