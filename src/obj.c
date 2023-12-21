@@ -332,8 +332,9 @@ void cgObjRead(const char *path,
   free(normals);
   free(uv);
 
-  /* for (size_t i = 0; i < materialsCount; i++) */
-  /*   free(materialsNames[i]); */
+  // it was commented lmao
+  for (size_t i = 0; i < materialsCount; i++)
+    free(materialsNames[i]);
 }
 
 cg_object_t *cgObjCreateObject(const char *path) {

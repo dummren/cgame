@@ -23,6 +23,7 @@
 #include "sfx.h"
 #include "consts.h"
 #include "lights.h"
+#include "prefabs.h"
 
 const cg_start_func_t (*SCENES_START_FUNCS[SCENES_COUNT])() = {
   cgMenuStart,
@@ -138,7 +139,7 @@ int main(int argc, char *argv[]) {
   cgMeshStoref(mesh, CANVAS_POSITIONS, sizeof(CANVAS_POSITIONS), 1, 3);
   cgMeshStoref(mesh, CANVAS_UV, sizeof(CANVAS_UV), 2, 2);
 
-  SCENES_START_FUNCS[scene]();
+  bool isLoading = true;
 
   while (cgWindowIsOpen(window)) {
     glfwPollEvents();
@@ -179,7 +180,7 @@ int main(int argc, char *argv[]) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + 1,
                            GL_TEXTURE_2D, fbBrightTex, 0);
 
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
+    glRenderbufferStorage(GL_RENDERBUFFER, CG_DEPTH_COMPONENT,
                           WND_WIDTH, WND_HEIGHT);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                               GL_RENDERBUFFER, renderbuffer);
@@ -194,15 +195,29 @@ int main(int argc, char *argv[]) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glViewport(0, 0, WND_WIDTH, WND_HEIGHT);
 
-    if (f_prevScene != scene) {
+    if (!isLoading && f_prevScene != scene) {
       SCENES_END_FUNCS[f_prevScene]();
       SCENES_START_FUNCS[scene]();
 
       f_prevScene = scene;
     }
 
-    SCENES_UPDATE_FUNCS[scene]();
-    SCENES_DRAW_FUNCS[scene]();
+    if (isLoading) {
+      cgTextReset();
+      cgTextFontBind(cgFontsVideotype);
+      cgTextAlign(CG_TEXT_ALIGN_CENTER);
+      cgTextValign(CG_TEXT_VALIGN_MIDDLE);
+      cgTextColor(1.0f, 1.0f, 1.0f, 1.0f);
+      cgTextDraw(WND_WIDTH / 2, WND_HEIGHT / 2, 5.0f,
+        "Very non optimized models loading...\nplease wait", 25.0f);
+
+      SCENES_START_FUNCS[scene]();
+    }
+
+    if (!isLoading) {
+      SCENES_UPDATE_FUNCS[scene]();
+      SCENES_DRAW_FUNCS[scene]();
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -220,10 +235,12 @@ int main(int argc, char *argv[]) {
       glActiveTexture(GL_TEXTURE0 + 1);
       cgTextureBind(fbBrightTex);
 
-      glUniform1i(glGetUniformLocation(prog, "u_bloomEnabled"), CGS_BLOOM);
+      glUniform1f(glGetUniformLocation(prog, "u_time"), glfwGetTime());
 
-      glUniform1i(glGetUniformLocation(prog, "u_fragTex"), 0);
-      glUniform1i(glGetUniformLocation(prog, "u_brightTex"), 1);
+      glUniform1i(glGetUniformLocation(prog, "u_bloomEnabled\0"), CGS_BLOOM);
+
+      glUniform1i(glGetUniformLocation(prog, "u_fragTex\0"), 0);
+      glUniform1i(glGetUniformLocation(prog, "u_brightTex\0"), 1);
     } // preparing stuff for rendering
 
     cgMeshDraw(mesh);
@@ -249,7 +266,11 @@ int main(int argc, char *argv[]) {
     cgWindowResetPressedKeysB(window);
     cgWindowResetRelCursorPos(window);
 
-    cgLightsPointsClear();
+    if (isLoading) {
+      cgPrefabsInit();
+      isLoading = false;
+      cgTextReset();
+    }
   }
 
   SCENES_END_FUNCS[scene]();

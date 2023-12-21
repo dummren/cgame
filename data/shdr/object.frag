@@ -2,7 +2,6 @@
 
 #define MAX_MATERIALS 8
 #define MAX_POINT_LIGHTS 128
-#define LIGHT_BRIGHTNESS_INTENSITY 1.5f
 
 struct Material {
   vec4 albedoCol, brightCol;
@@ -73,8 +72,5 @@ void main() {
     o_brightCol *= texture(u_materials[f_materialIndex].brightTex, f_uv);
 
   o_fragCol *= u_ambientCol + vec4(diffuseLight(), 1.0f);
-  o_brightCol += u_ambientCol;
-  o_brightCol.rgb += diffuseLight();
-  o_brightCol.rgb -= vec3(1.0f);
-  o_brightCol.rgb *= LIGHT_BRIGHTNESS_INTENSITY;
+  o_brightCol.rgb += max(vec3(o_fragCol) - vec3(1.0f), vec3(0.0f));
 }

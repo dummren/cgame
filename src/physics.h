@@ -27,8 +27,8 @@ cg_physics_collider_t *cgPhysicsCollider(bool, bool, vec3s, vec3s);
 void cgPhysicsWorldAdd(cg_physics_world_t**, cg_physics_collider_t*);
 vec3s cgPhysicsWorldAttemptMove(cg_physics_world_t*,
                                 cg_physics_collider_t*,
-                                vec3s,
-                                bool*);
+                                vec3s);
+bool cgPhysicsIsPointInsideBox(cg_physics_world_t*, vec3s, vec3s, vec3s);
 
 void cgPhysicsWorldDelete(cg_physics_world_t**);
 

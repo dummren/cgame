@@ -16,7 +16,7 @@
 #define PLAYER_LOOK_SMOOTH 0.5f
 #define PLAYER_SPEED 0.075f
 #define PLAYER_ACCEL 0.1f
-#define PLAYER_STEP_HEIGHT 1.0f
+#define PLAYER_STEP_HEIGHT 0.5f
 
 typedef struct {
   cg_camera_t *cam;
@@ -25,14 +25,12 @@ typedef struct {
   vec3s rot;
   vec3s velocity;
   cg_physics_collider_t *collider;
-  bool isOnFloor;
 } cg_player_t;
 
 cg_player_t *cgPlayer();
 mat4s cgPlayerView(const cg_player_t*);
-
+vec3s cgPlayerCameraPos(const cg_player_t*);
 void cgPlayerUpdate(cg_player_t*);
-
 void cgPlayerDelete(cg_player_t**);
 
 #endif // __CG__PLAYER_H__

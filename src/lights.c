@@ -32,9 +32,9 @@ void cgLightsPointsClear() {
     };
 }
 
-void cgLightsPoint(const float x, const float y, const float z,
-                   const float r, const float g, const float b,
-                   const float radius) {
+int cgLightsPointAdd(const float x, const float y, const float z,
+                     const float r, const float g, const float b,
+                     const float radius) {
   for (size_t i = 0; i < CG_LIGHTS_POINTS_MAX; i++)
     if (cgLightsIsPointSet(cgLightsPoints[i])) {
       cg_lights_point_t light;
@@ -45,6 +45,6 @@ void cgLightsPoint(const float x, const float y, const float z,
 
       cgLightsPoints[i] = light;
 
-      break;
+      return i;
     }
 }

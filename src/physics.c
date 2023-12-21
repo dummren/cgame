@@ -43,9 +43,9 @@ void cgPhysicsWorldAdd(cg_physics_world_t **physicsWorld,
 
 vec3s cgPhysicsWorldAttemptMove(cg_physics_world_t *physicsWorld,
                                 cg_physics_collider_t *collider,
-                                vec3s move,
-                                bool *outIsOnFloor) {
-  float stepDelta = move.y;
+                                vec3s move) {
+  bool isMaxFloorRelYSet = false;
+  float maxFloorRelY = 0.0f;
 
   for (size_t i = 0; i < CG_PHYSICS_WORLD_MAX_OBJECTS; i++) {
     cg_physics_collider_t *objCollider = physicsWorld->colliders[i];
@@ -105,28 +105,74 @@ vec3s cgPhysicsWorldAttemptMove(cg_physics_world_t *physicsWorld,
     bool isPenetratingPositiveZ =
       objCldMaxPoints.z - (cldMinPoints.z + move.z) > move.z;
 
+    bool isCloserToNegativeX = collider->pos.x < objCollider->pos.x;
+    bool isCloserToPositiveX = collider->pos.x > objCollider->pos.x;
+    bool isCloserToNegativeY = collider->pos.y < objCollider->pos.y;
+    bool isCloserToPositiveY = collider->pos.y > objCollider->pos.y;
+    bool isCloserToNegativeZ = collider->pos.z < objCollider->pos.z;
+    bool isCloserToPositiveZ = collider->pos.z > objCollider->pos.z;
+
+    bool isInsideY = (isPenetratingNegativeX && isPenetratingPositiveX)
+      && (isPenetratingNegativeZ && isPenetratingPositiveZ);
+
+    if (collider->dynamic && isInsideY) {
+      float objRelY = objCldMaxPoints.y - cldMinPoints.y;
+
+      if ((objRelY > maxFloorRelY || !isMaxFloorRelYSet)
+          && fabs(objRelY) <= collider->stepHeight) {
+        maxFloorRelY = objRelY;
+        isMaxFloorRelYSet = true;
+      }
+    }
+
     if (isOnAxisY) {
-      if (collider->pos.x < objCollider->pos.x)
-        if (isPenetratingNegativeX && isOnAxisZ)
-          move.x = objCldMinPoints.x - cldMaxPoints.x;
+      if (isPenetratingNegativeX && isOnAxisZ && isCloserToNegativeX) {
+        float pushDistance = objCldMinPoints.x - cldMaxPoints.x;
 
-      if (collider->pos.x > objCollider->pos.x)
-        if (isPenetratingPositiveX && isOnAxisZ)
-          move.x = -(cldMinPoints.x - objCldMaxPoints.x);
+        if (fabs(pushDistance) <= fabs(move.x))
+          move.x = pushDistance;
+        else
+          break;
+      }
 
-      if (collider->pos.z < objCollider->pos.z)
-        if (isPenetratingNegativeZ && isOnAxisX)
-          move.z = objCldMinPoints.z - cldMaxPoints.z;
+      if (isPenetratingPositiveX && isOnAxisZ && isCloserToPositiveX) {
+        float pushDistance = -(cldMinPoints.x - objCldMaxPoints.x);
 
-      if (collider->pos.z > objCollider->pos.z)
-        if (isPenetratingPositiveZ && isOnAxisX)
-          move.z = -(cldMinPoints.z - objCldMaxPoints.z);
+        if (fabs(pushDistance) <= fabs(move.x))
+          move.x = pushDistance;
+        else
+          break;
+      }
+
+      if (isPenetratingNegativeZ && isOnAxisX && isCloserToNegativeZ) {
+        float pushDistance = objCldMinPoints.z - cldMaxPoints.z;
+
+        if (fabs(pushDistance) <= fabs(move.z))
+          move.z = pushDistance;
+        else
+          break;
+      }
+
+      if (isPenetratingPositiveZ && isOnAxisX && isCloserToPositiveZ) {
+        float pushDistance = -(cldMinPoints.z - objCldMaxPoints.z);
+
+        if (fabs(pushDistance) <= fabs(move.z))
+          move.z = pushDistance;
+        else
+          break;
+      }
     }
   }
 
-  move.y = stepDelta;
+  move.y = maxFloorRelY;
 
   return move;
+}
+
+bool cgPhysicsIsPointInsideBox(cg_physics_world_t *physicsWorld,
+                               vec3s pointPos,
+                               vec3s boxPos, vec3s boxSize) {
+  return false;
 }
 
 void cgPhysicsWorldDelete(cg_physics_world_t **physicsWorld) {

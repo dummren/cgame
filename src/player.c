@@ -23,12 +23,12 @@ cg_player_t *cgPlayer() {
   player->rot = GLMS_VEC3_ZERO;
   player->velocity = GLMS_VEC3_ZERO;
 
-  player->collider = cgPhysicsCollider(true,
-                                       true,
-                                       (vec3s) { 0.5f, PLAYER_HEIGHT, 0.5f },
-                                       GLMS_VEC3_ZERO);
+  player->collider =
+    cgPhysicsCollider(true,
+                      true,
+                      (vec3s) { 0.5f, PLAYER_HEIGHT, 0.5f },
+                      (vec3s) { 0.0f, PLAYER_HEIGHT / 2.0f, 0.0f });
   player->collider->stepHeight = PLAYER_STEP_HEIGHT;
-  player->isOnFloor = false;
 
   cgPhysicsWorldAdd(&cgGamePhysicsWorld, player->collider);
 
@@ -55,6 +55,10 @@ mat4s cgPlayerView(const cg_player_t *player) {
   view = glms_mul(camRot, view);
 
   return view;
+}
+
+vec3s cgPlayerCameraPos(const cg_player_t *player) {
+  return glms_vec3_add(player->pos, player->cam->pos);
 }
 
 void cgPlayerUpdate(cg_player_t *player) {
@@ -92,11 +96,14 @@ void cgPlayerUpdate(cg_player_t *player) {
 
   player->velocity = cgPhysicsWorldAttemptMove(cgGamePhysicsWorld,
                                                player->collider,
-                                               player->velocity,
-                                               &player->isOnFloor);
+                                               player->velocity);
 
   player->pos = glms_vec3_add(player->pos, player->velocity);
+
   player->collider->pos = player->pos;
+  player->collider->pos =
+    glms_vec3_add(player->collider->pos,
+                  (vec3s) { 0.0f, PLAYER_HEIGHT / 2.0f, 0.0f });
 }
 
 void cgPlayerDelete(cg_player_t **player) {

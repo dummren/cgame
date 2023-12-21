@@ -18,8 +18,8 @@ extern cg_lights_point_t cgLightsPoints[CG_LIGHTS_POINTS_MAX];
 void cgLightsInit();
 bool cgLightsIsPointSet(cg_lights_point_t);
 void cgLightsPointsClear();
-void cgLightsPoint(const float, const float, const float,
-                   const float, const float, const float,
-                   const float);
+int cgLightsPointAdd(const float, const float, const float,
+                     const float, const float, const float,
+                     const float);
 
 #endif // __CG__LIGHTS_H__

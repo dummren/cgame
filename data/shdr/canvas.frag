@@ -7,6 +7,7 @@
 in vec3 f_pos;
 in vec2 f_uv;
 
+uniform float u_time;
 uniform int u_bloomEnabled;
 uniform sampler2D u_fragTex;
 uniform sampler2D u_brightTex;

@@ -100,7 +100,7 @@ cg_window_t cgWindow(const int width,
 
 void cgWindowMakeCurrent(const cg_window_t window) {
   glfwMakeContextCurrent(window);
-  assert(glewInit() == GLEW_OK);
+  initGlFunctions();
   glfwSwapInterval(1);
 }
 
