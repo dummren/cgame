@@ -23,7 +23,7 @@ all dependencies are preinstalled with your system or provided with an exe file
 you need the following packages:
 
 ```
-sudo dnf install gcc glfw-devel glew-devel libglvnd-devel stb-devel make python3 xxd
+sudo dnf install gcc glfw-devel libglvnd-devel stb-devel make python3 xxd upx
 ```
 
 additional packages if you want to build cgame for windows:
