@@ -10,7 +10,7 @@ OPTIMIZATION = -s -Oz -fdata-sections -ffunction-sections -fipa-pta \
 
 LIN64_CC = gcc
 LIN64_INCLUDE = $(INCLUDE) -I./include/lin64/
-LIN64_LIB = -lGL -lGLEW -lglfw -lopenal -lm
+LIN64_LIB = -lGL -lglfw -lopenal -lm
 LIN64_SLIB =
 LIN64_FLAGS = $(FLAGS) $(OPTIMIZATION)
 LIN64_DEBUG_FLAGS = $(FLAGS) -g
@@ -19,10 +19,10 @@ WIN32_CC = i686-w64-mingw32-gcc
 WIN32_INCLUDE = $(INCLUDE) -I./include/win32/
 WIN32_LIB = -lopengl32 -lgdi32 -lglu32
 WIN32_SLIB = lib/win32/*
-WIN32_FLAGS = $(FLAGS) -static $(OPTIMIZATION) -Wl,-rpath=.
+WIN32_FLAGS = $(FLAGS) -g -static $(OPTIMIZATION) -Wl,-rpath=.
 
 all: clean struct data lin64-debug
-release: clean struct data lin64 win32
+release: clean struct data lin64 win32 optimize-size
 
 clean:
 	rm -rf bin/ tmp/
@@ -48,3 +48,6 @@ win32:
 		$(WIN32_INCLUDE) $(WIN32_LIB) $(WIN32_FLAGS)
 
 	cp dlib/win32/* bin/
+
+optimize-size:
+	upx bin/* --all-methods --best --ultra-brute --lzma
